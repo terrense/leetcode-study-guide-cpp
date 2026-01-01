@@ -1,0 +1,65 @@
+# Simple Makefile for LeetCode Study Guide
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -I./include
+LDFLAGS = -lgtest -lgtest_main -pthread
+
+# Source directories
+SRC_DIR = src
+TEST_DIR = tests
+BUILD_DIR = build
+
+# Source files
+SOURCES = $(SRC_DIR)/common.cpp $(SRC_DIR)/problem.cpp $(SRC_DIR)/solution.cpp $(SRC_DIR)/learning_path.cpp
+MAIN_SOURCE = $(SRC_DIR)/main.cpp
+
+# Test files
+TEST_SOURCES = $(wildcard $(TEST_DIR)/*.cpp)
+TEST_TARGETS = $(patsubst $(TEST_DIR)/%.cpp, $(BUILD_DIR)/%, $(TEST_SOURCES))
+
+# Main target
+MAIN_TARGET = $(BUILD_DIR)/leetcode_study_guide
+
+.PHONY: all clean test run
+
+all: $(MAIN_TARGET)
+
+# Build main executable
+$(MAIN_TARGET): $(MAIN_SOURCE) $(SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+# Build directory
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Build and run tests
+test: $(TEST_TARGETS)
+	@echo "Running all tests..."
+	@for test in $(TEST_TARGETS); do \
+		echo "Running $$test..."; \
+		$$test; \
+		echo; \
+	done
+
+# Individual test targets
+$(BUILD_DIR)/test_%: $(TEST_DIR)/test_%.cpp $(SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
+
+$(BUILD_DIR)/array_test: $(TEST_DIR)/array_test.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
+
+# Run main program
+run: $(MAIN_TARGET)
+	./$(MAIN_TARGET)
+
+# Clean build files
+clean:
+	rm -rf $(BUILD_DIR)
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all     - Build main executable"
+	@echo "  test    - Build and run all tests"
+	@echo "  run     - Build and run main program"
+	@echo "  clean   - Remove build files"
+	@echo "  help    - Show this help"
