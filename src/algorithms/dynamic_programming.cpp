@@ -5,71 +5,169 @@
 namespace leetcode_study_guide {
 namespace algorithms {
 
-// Static member initialization
+// Static member initialization for memoization
 std::unordered_map<int, long long> DynamicProgramming::fibMemo;
 
-// Fibonacci with memoization (top-down)
+/**
+ * FIBONACCI SEQUENCE IMPLEMENTATIONS
+ * 
+ * The Fibonacci sequence is a classic example to demonstrate different DP approaches:
+ * F(0) = 0, F(1) = 1, F(n) = F(n-1) + F(n-2) for n > 1
+ * 
+ * This problem has optimal substructure and overlapping subproblems,
+ * making it perfect for dynamic programming optimization.
+ */
+
+/**
+ * Fibonacci with Memoization (Top-Down Dynamic Programming)
+ * 
+ * Approach: Start from the target and recursively break down into subproblems.
+ * Use a hash map to store computed results to avoid redundant calculations.
+ * 
+ * Time Complexity: O(n) - each subproblem computed only once
+ * Space Complexity: O(n) - memoization table + recursion stack
+ * 
+ * When to use: When you naturally think recursively about the problem
+ */
 long long DynamicProgramming::fibonacciMemo(int n) {
+    // Clear any previous memoization data for fresh calculation
     fibMemo.clear();
+    // Start the memoized recursive calculation
     return fibonacciMemoHelper(n);
 }
 
+/**
+ * Recursive helper function with memoization
+ * This function implements the core memoization logic
+ */
 long long DynamicProgramming::fibonacciMemoHelper(int n) {
+    // Base cases: F(0) = 0, F(1) = 1
     if (n <= 1) return n;
     
+    // Check if we've already computed this value (memoization lookup)
     auto it = fibMemo.find(n);
     if (it != fibMemo.end()) {
-        return it->second;
+        return it->second;  // Return cached result
     }
     
+    // Compute the result recursively
+    // F(n) = F(n-1) + F(n-2)
     long long result = fibonacciMemoHelper(n - 1) + fibonacciMemoHelper(n - 2);
+    
+    // Store the result in memoization table for future use
     fibMemo[n] = result;
+    
     return result;
 }
 
-// Fibonacci with tabulation (bottom-up)
+/**
+ * Fibonacci with Tabulation (Bottom-Up Dynamic Programming)
+ * 
+ * Approach: Start from base cases and build up to the target iteratively.
+ * Use an array to store intermediate results in a systematic order.
+ * 
+ * Time Complexity: O(n) - single loop from 2 to n
+ * Space Complexity: O(n) - DP table of size n+1
+ * 
+ * When to use: When you can easily identify the order of subproblem computation
+ * Advantages: No recursion overhead, easier to optimize space
+ */
 long long DynamicProgramming::fibonacciTabulation(int n) {
+    // Handle base cases
     if (n <= 1) return n;
     
+    // Create DP table to store intermediate results
+    // dp[i] represents F(i)
     std::vector<long long> dp(n + 1);
-    dp[0] = 0;
-    dp[1] = 1;
     
+    // Initialize base cases
+    dp[0] = 0;  // F(0) = 0
+    dp[1] = 1;  // F(1) = 1
+    
+    // Fill the DP table bottom-up
+    // For each position i, compute F(i) using previously computed values
     for (int i = 2; i <= n; i++) {
+        // F(i) = F(i-1) + F(i-2)
+        // We can safely use dp[i-1] and dp[i-2] because they're already computed
         dp[i] = dp[i - 1] + dp[i - 2];
     }
     
+    // Return the final result
     return dp[n];
 }
 
-// Climbing stairs
+/**
+ * CLIMBING STAIRS PROBLEM
+ * 
+ * Problem: You're climbing a staircase with n steps. You can climb either 1 or 2 steps at a time.
+ * How many distinct ways can you climb to the top?
+ * 
+ * Analysis: This is essentially Fibonacci in disguise!
+ * - To reach step n, you can come from step (n-1) with 1 step, or step (n-2) with 2 steps
+ * - ways(n) = ways(n-1) + ways(n-2)
+ * - Base cases: ways(1) = 1, ways(2) = 2
+ */
+
+/**
+ * Climbing Stairs - Standard DP Approach
+ * Uses tabulation to build up the solution from base cases.
+ * 
+ * Time Complexity: O(n) - single pass through all steps
+ * Space Complexity: O(n) - DP array of size n+1
+ */
 int DynamicProgramming::climbStairs(int n) {
+    // Handle base cases
     if (n <= 2) return n;
     
+    // Create DP table where dp[i] = number of ways to reach step i
     std::vector<int> dp(n + 1);
-    dp[1] = 1;
-    dp[2] = 2;
     
+    // Base cases
+    dp[1] = 1;  // Only one way to reach step 1: take 1 step
+    dp[2] = 2;  // Two ways to reach step 2: (1+1) or (2)
+    
+    // Fill DP table for steps 3 to n
     for (int i = 3; i <= n; i++) {
+        // To reach step i, we can:
+        // 1. Come from step (i-1) and take 1 step
+        // 2. Come from step (i-2) and take 2 steps
         dp[i] = dp[i - 1] + dp[i - 2];
     }
     
     return dp[n];
 }
 
-// Climbing stairs optimized (O(1) space)
+/**
+ * Climbing Stairs - Space Optimized Version
+ * 
+ * Key Insight: We only need the previous two values to compute the current value.
+ * Instead of storing all intermediate results, we can use just two variables.
+ * 
+ * Time Complexity: O(n) - same as before
+ * Space Complexity: O(1) - only using constant extra space
+ * 
+ * This is a common optimization technique in DP when the recurrence relation
+ * only depends on a fixed number of previous states.
+ */
 int DynamicProgramming::climbStairsOptimized(int n) {
+    // Handle base cases
     if (n <= 2) return n;
     
-    int prev2 = 1, prev1 = 2;
+    // Only keep track of the last two values
+    int prev2 = 1;  // ways to reach step 1
+    int prev1 = 2;  // ways to reach step 2
     
+    // Compute for steps 3 to n
     for (int i = 3; i <= n; i++) {
+        // Current ways = ways from (i-1) + ways from (i-2)
         int current = prev1 + prev2;
-        prev2 = prev1;
-        prev1 = current;
+        
+        // Slide the window: update prev2 and prev1 for next iteration
+        prev2 = prev1;      // What was prev1 becomes prev2
+        prev1 = current;    // Current result becomes prev1
     }
     
-    return prev1;
+    return prev1;  // prev1 now contains ways to reach step n
 }
 
 // House robber

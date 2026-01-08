@@ -7,22 +7,59 @@
 namespace leetcode_study_guide {
 namespace algorithms {
 
-// ===== FIXED SIZE SLIDING WINDOW =====
+/**
+ * SLIDING WINDOW TECHNIQUE - FIXED SIZE WINDOW
+ * 
+ * Fixed size sliding window maintains a constant window size throughout the process.
+ * The window "slides" by removing the leftmost element and adding a new rightmost element.
+ * 
+ * Common Pattern:
+ * 1. Calculate result for first window of size k
+ * 2. Slide window: remove left element, add right element
+ * 3. Update result based on new window
+ * 4. Repeat until end of array
+ * 
+ * Time Complexity: Usually O(n) - each element added and removed exactly once
+ * Space Complexity: Usually O(1) or O(k) depending on what we store
+ */
 
+/**
+ * Maximum Sum Subarray of Size K
+ * 
+ * Problem: Find the maximum sum of any contiguous subarray of size k.
+ * 
+ * Algorithm Logic:
+ * 1. Calculate sum of first k elements (initial window)
+ * 2. Slide window: subtract leftmost, add rightmost
+ * 3. Keep track of maximum sum seen
+ * 
+ * Key Insight: Instead of recalculating sum for each window (O(k) per window),
+ * we maintain running sum by adding/removing one element (O(1) per window).
+ * 
+ * Time Complexity: O(n) - single pass through array
+ * Space Complexity: O(1) - only storing sum and max values
+ */
 int SlidingWindow::maxSumSubarray(const std::vector<int>& nums, int k) {
+    // Handle edge case: array smaller than window size
     if (nums.size() < k) return 0;
     
+    // Step 1: Calculate sum of first window
     int windowSum = 0;
-    // Calculate sum of first window
     for (int i = 0; i < k; i++) {
         windowSum += nums[i];
     }
     
+    // Initialize max sum with first window's sum
     int maxSum = windowSum;
     
-    // Slide the window
+    // Step 2: Slide the window through rest of array
     for (size_t i = k; i < nums.size(); i++) {
+        // Slide window: remove leftmost element, add rightmost element
+        // This maintains window size k while moving it one position right
         windowSum = windowSum - nums[i - k] + nums[i];
+        //          ^remove left  ^add right
+        
+        // Update maximum sum if current window is better
         maxSum = std::max(maxSum, windowSum);
     }
     
@@ -54,19 +91,58 @@ std::vector<int> SlidingWindow::maxSlidingWindow(const std::vector<int>& nums, i
     return maxSlidingWindowDeque(nums, k);
 }
 
-// ===== VARIABLE SIZE SLIDING WINDOW =====
+/**
+ * SLIDING WINDOW TECHNIQUE - VARIABLE SIZE WINDOW
+ * 
+ * Variable size sliding window adjusts its size based on certain conditions.
+ * The window can expand (move right pointer) or contract (move left pointer).
+ * 
+ * Common Pattern:
+ * 1. Expand window by moving right pointer
+ * 2. Check if current window satisfies condition
+ * 3. If not, contract window by moving left pointer
+ * 4. Update result based on current valid window
+ * 5. Repeat until right pointer reaches end
+ * 
+ * Time Complexity: Usually O(n) - each element added and removed at most once
+ * Space Complexity: Depends on what we track (often O(k) for character/element counts)
+ */
 
+/**
+ * Longest Substring Without Repeating Characters
+ * 
+ * Problem: Find the length of the longest substring without repeating characters.
+ * 
+ * Algorithm Logic:
+ * 1. Use a set to track characters in current window
+ * 2. Expand window by adding characters to set
+ * 3. If duplicate found, contract window from left until duplicate removed
+ * 4. Track maximum window size seen
+ * 
+ * Key Insight: Use set for O(1) duplicate detection and removal
+ * 
+ * Time Complexity: O(n) - each character added and removed at most once
+ * Space Complexity: O(min(m,n)) - set size limited by charset size or string length
+ */
 int SlidingWindow::lengthOfLongestSubstring(const std::string& s) {
+    // Use set to track characters in current window
     std::unordered_set<char> window;
     int left = 0, maxLen = 0;
     
+    // Expand window with right pointer
     for (int right = 0; right < s.length(); right++) {
+        // Contract window while we have duplicate character
+        // This ensures window always has unique characters
         while (window.count(s[right])) {
+            // Remove leftmost character and move left pointer
             window.erase(s[left]);
             left++;
         }
         
+        // Add current character to window
         window.insert(s[right]);
+        
+        // Update maximum length with current window size
         maxLen = std::max(maxLen, right - left + 1);
     }
     
@@ -100,44 +176,77 @@ int SlidingWindow::lengthOfLongestSubstringTwoDistinct(const std::string& s) {
     return lengthOfLongestSubstringKDistinct(s, 2);
 }
 
+/**
+ * Minimum Window Substring
+ * 
+ * Problem: Find the minimum window in string s that contains all characters of string t.
+ * 
+ * Algorithm Logic:
+ * 1. Count characters needed from string t
+ * 2. Expand window until all characters of t are included
+ * 3. Contract window while maintaining all characters of t
+ * 4. Track minimum window that satisfies condition
+ * 
+ * Key Techniques:
+ * - Two hash maps: one for target counts, one for window counts
+ * - "formed" counter: tracks how many unique characters have required count
+ * - Expand-contract pattern: expand to find valid window, contract to minimize
+ * 
+ * Time Complexity: O(|s| + |t|) - each character in s added and removed at most once
+ * Space Complexity: O(|s| + |t|) - hash maps for character counts
+ */
 std::string SlidingWindow::minWindow(const std::string& s, const std::string& t) {
     if (s.empty() || t.empty()) return "";
     
+    // Count characters needed from string t
     std::unordered_map<char, int> tCount, windowCount;
     for (char c : t) {
         tCount[c]++;
     }
     
+    // Window pointers and result tracking
     int left = 0, right = 0;
     int minLen = INT_MAX, minStart = 0;
-    int formed = 0;
-    int required = tCount.size();
     
+    // Track how many unique characters in window have desired frequency
+    int formed = 0;                    // Current count of satisfied characters
+    int required = tCount.size();      // Total unique characters needed
+    
+    // Expand window with right pointer
     while (right < s.length()) {
+        // Add character from right to window
         char c = s[right];
         windowCount[c]++;
         
+        // Check if frequency of current character matches desired count in t
         if (tCount.count(c) && windowCount[c] == tCount[c]) {
-            formed++;
+            formed++;  // One more character requirement satisfied
         }
         
+        // Contract window while it's valid (contains all characters of t)
         while (left <= right && formed == required) {
+            // Update minimum window if current is smaller
             if (right - left + 1 < minLen) {
                 minLen = right - left + 1;
                 minStart = left;
             }
             
+            // Remove character from left of window
             char leftChar = s[left];
             windowCount[leftChar]--;
+            
+            // Check if removing this character breaks a requirement
             if (tCount.count(leftChar) && windowCount[leftChar] < tCount[leftChar]) {
-                formed--;
+                formed--;  // One character requirement no longer satisfied
             }
-            left++;
+            
+            left++;  // Contract window
         }
         
-        right++;
+        right++;  // Expand window
     }
     
+    // Return minimum window or empty string if no valid window found
     return minLen == INT_MAX ? "" : s.substr(minStart, minLen);
 }
 

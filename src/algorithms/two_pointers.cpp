@@ -7,44 +7,113 @@
 namespace leetcode_study_guide {
 namespace algorithms {
 
-// ===== OPPOSITE DIRECTION TWO POINTERS =====
+/**
+ * TWO POINTERS TECHNIQUE - OPPOSITE DIRECTION
+ * 
+ * This category uses two pointers starting from opposite ends of the array/string
+ * and moving towards each other. Common patterns:
+ * - left starts at 0, right starts at size-1
+ * - Move pointers based on some condition
+ * - Stop when pointers meet or cross
+ * 
+ * Use cases: Palindrome checking, two sum in sorted array, container problems
+ */
 
+/**
+ * Two Sum II - Input Array is Sorted
+ * 
+ * Problem: Given a sorted array, find two numbers that add up to target.
+ * Return their 1-indexed positions.
+ * 
+ * Algorithm Logic:
+ * 1. Use two pointers from both ends of sorted array
+ * 2. If sum equals target, found the answer
+ * 3. If sum is too small, move left pointer right (increase sum)
+ * 4. If sum is too large, move right pointer left (decrease sum)
+ * 
+ * Key Insight: Sorted array allows us to make decisions about pointer movement
+ * 
+ * Time Complexity: O(n) - each element visited at most once
+ * Space Complexity: O(1) - only using two pointers
+ */
 std::vector<int> TwoPointers::twoSum(const std::vector<int>& numbers, int target) {
+    // Initialize pointers at opposite ends
     int left = 0, right = numbers.size() - 1;
     
+    // Continue until pointers meet
     while (left < right) {
+        // Calculate current sum
         int sum = numbers[left] + numbers[right];
+        
         if (sum == target) {
-            return {left + 1, right + 1}; // 1-indexed
-        } else if (sum < target) {
+            // Found the target sum, return 1-indexed positions
+            return {left + 1, right + 1};
+        } 
+        else if (sum < target) {
+            // Sum is too small, need a larger number
+            // Move left pointer right to get larger value (array is sorted)
             left++;
-        } else {
+        } 
+        else {
+            // Sum is too large, need a smaller number
+            // Move right pointer left to get smaller value
             right--;
         }
     }
     
-    return {}; // No solution found
+    // No solution found (problem guarantees exactly one solution exists)
+    return {};
 }
 
+/**
+ * Valid Palindrome
+ * 
+ * Problem: Check if a string is a palindrome, considering only alphanumeric characters
+ * and ignoring case differences.
+ * 
+ * Algorithm Logic:
+ * 1. Use two pointers from both ends
+ * 2. Skip non-alphanumeric characters
+ * 3. Compare characters after converting to lowercase
+ * 4. If any mismatch found, not a palindrome
+ * 
+ * Key Techniques:
+ * - Character filtering (skip non-alphanumeric)
+ * - Case normalization (convert to lowercase)
+ * - Two pointers convergence
+ * 
+ * Time Complexity: O(n) - each character examined at most once
+ * Space Complexity: O(1) - only using two pointers
+ */
 bool TwoPointers::isPalindrome(const std::string& s) {
+    // Initialize pointers at both ends
     int left = 0, right = s.length() - 1;
     
+    // Move pointers towards each other
     while (left < right) {
+        // Skip non-alphanumeric characters from left
+        // This handles spaces, punctuation, etc.
         while (left < right && !isAlphanumeric(s[left])) {
             left++;
         }
+        
+        // Skip non-alphanumeric characters from right
         while (left < right && !isAlphanumeric(s[right])) {
             right--;
         }
         
+        // Compare characters after normalizing case
+        // If they don't match, it's not a palindrome
         if (toLowerCase(s[left]) != toLowerCase(s[right])) {
             return false;
         }
         
+        // Move both pointers inward for next comparison
         left++;
         right--;
     }
     
+    // All characters matched, it's a palindrome
     return true;
 }
 
@@ -58,19 +127,45 @@ void TwoPointers::reverseString(std::vector<char>& s) {
     }
 }
 
+/**
+ * Container With Most Water
+ * 
+ * Problem: Given heights of vertical lines, find two lines that form a container
+ * holding the most water.
+ * 
+ * Algorithm Logic:
+ * 1. Start with widest possible container (leftmost and rightmost lines)
+ * 2. Calculate current water area = width × min(left_height, right_height)
+ * 3. Move the pointer with smaller height inward (greedy choice)
+ * 4. Keep track of maximum area seen so far
+ * 
+ * Key Insight: Always move the shorter line's pointer
+ * - Moving the taller line's pointer can only decrease or maintain area
+ * - Moving the shorter line's pointer might increase area
+ * 
+ * Time Complexity: O(n) - each line considered at most once
+ * Space Complexity: O(1) - only using two pointers and variables
+ */
 int TwoPointers::maxArea(const std::vector<int>& height) {
+    // Initialize pointers at both ends for maximum width
     int left = 0, right = height.size() - 1;
     int maxWater = 0;
     
+    // Continue until pointers meet
     while (left < right) {
-        int width = right - left;
-        int currentWater = width * std::min(height[left], height[right]);
+        // Calculate current container dimensions
+        int width = right - left;                                    // Distance between lines
+        int currentWater = width * std::min(height[left], height[right]); // Area = width × min_height
+        
+        // Update maximum water if current is better
         maxWater = std::max(maxWater, currentWater);
         
+        // Greedy choice: move the pointer with smaller height
+        // This gives us the best chance of finding a larger area
         if (height[left] < height[right]) {
-            left++;
+            left++;     // Left height is limiting factor, try next left line
         } else {
-            right--;
+            right--;    // Right height is limiting factor, try next right line
         }
     }
     
