@@ -11,15 +11,18 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Compiler flags
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "/W4 /EHsc")
+    set(CMAKE_CXX_FLAGS_DEBUG "/Od /Zi")
+    set(CMAKE_CXX_FLAGS_RELEASE "/O2")
+else()
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+endif()
 
 # Include directories
 include_directories(include)
-
-# Find required packages
-find_package(GTest REQUIRED)
 
 # Source files
 set(SOURCES 
@@ -32,7 +35,6 @@ set(SOURCES
     src/solution.cpp
 )
 file(GLOB_RECURSE HEADERS "include/*.h")
-file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
 
 # Create main library
 add_library(leetcode_study_guide ${SOURCES} ${HEADERS})
@@ -42,25 +44,16 @@ target_include_directories(leetcode_study_guide PUBLIC include)
 add_executable(main src/main.cpp)
 target_link_libraries(main leetcode_study_guide)
 
-# Create test executable
-if(TEST_SOURCES)
-    # Only include tests that can compile successfully
-    set(WORKING_TEST_SOURCES 
-        tests/tree_test.cpp
-        tests/heap_test.cpp
-        tests/minimal_graph_test.cpp
-    )
-    
-    add_executable(run_tests ${WORKING_TEST_SOURCES})
-    target_link_libraries(run_tests leetcode_study_guide GTest::gtest GTest::gtest_main)
-    
-    # Enable testing
-    enable_testing()
-    add_test(NAME unit_tests COMMAND run_tests)
-endif()
+# Create simple test executable
+add_executable(simple_tests tests/simple_test.cpp)
+target_link_libraries(simple_tests leetcode_study_guide)
+
+# Enable testing
+enable_testing()
+add_test(NAME core_tests COMMAND simple_tests)
 
 # Installation
-install(TARGETS leetcode_study_guide main
+install(TARGETS leetcode_study_guide main simple_tests
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin)
